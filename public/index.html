@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Major Scale Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1b2430;
+    --panel:#212c3b;
+    --panel-2:#243040;
+    --rule:#3a4756;
+    --chalk:#edebe3;
+    --gold:#d4af37;
+    --teal:#5ea8a0;
+    --muted:#8b97a6;
+    --key-black:#10151c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(ellipse at 80% 90%, rgba(255,255,255,0.025), transparent 45%),
+      var(--bg);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:28px 16px 56px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:22px;
+  }
+  header .eyebrow{
+    font-family:'Caveat',cursive;
+    font-size:22px;
+    color:var(--teal);
+    letter-spacing:0.5px;
+    display:block;
+    margin-bottom:2px;
+  }
+  h1{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0 0 6px;
+    letter-spacing:0.2px;
+  }
+  header p{
+    color:var(--muted);
+    font-size:14.5px;
+    margin:0;
+  }
+  .cof-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    margin:4px 0 4px;
+  }
+  #cofSvg{ width:190px; height:190px; }
+  .cof-label{
+    font-family:'Caveat',cursive;
+    font-size:15px;
+    color:var(--muted);
+    letter-spacing:0.5px;
+  }
+  .staff-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .staff-head h2{ margin-bottom:4px; }
+  .staff-head .sub{ margin-bottom:0; }
+  .play-btn{
+    flex:0 0 auto;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:#1b1204;
+    background:var(--gold);
+    border:none;
+    border-radius:8px;
+    padding:9px 14px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:transform 0.1s ease, opacity 0.15s ease;
+  }
+  .play-btn:hover{ transform:translateY(-1px); }
+  .play-btn:disabled{ opacity:0.55; cursor:default; transform:none; }
+  #pianoSvg rect{ cursor:pointer; }
+  #pianoSvg rect:hover{ opacity:0.85; }
+  .keys-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin:22px 0 26px;
+  }
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin:22px 0 26px;
+  }
+  .key-chip{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--chalk);
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-radius:8px;
+    padding:8px 13px;
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .key-chip:hover{ border-color:var(--teal); }
+  .key-chip.active{
+    background:var(--gold);
+    color:#1b1204;
+    border-color:var(--gold);
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:20px 16px 16px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-family:'Playfair Display',serif;
+    font-size:19px;
+    font-weight:600;
+    margin:0 0 4px;
+    color:var(--chalk);
+  }
+  .card .sub{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 14px;
+  }
+  svg{ width:100%; height:auto; display:block; }
+  .legend{
+    display:flex;
+    gap:18px;
+    justify-content:center;
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .dot.gold{ background:var(--gold); }
+  .dot.teal{ background:var(--teal); }
+  .formula{
+    text-align:center;
+    font-family:'Caveat',cursive;
+    font-size:22px;
+    color:var(--teal);
+    margin-top:8px;
+    letter-spacing:1px;
+  }
+  #chordsList{ display:flex; flex-direction:column; gap:10px; }
+  .chord-row{
+    background:var(--panel-2);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:10px 12px 12px;
+    cursor:pointer;
+    transition:border-color 0.15s ease;
+  }
+  .chord-row:hover{ border-color:var(--teal); }
+  .chord-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .chord-name{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--chalk);
+  }
+  .chord-play{
+    flex:0 0 auto;
+    width:28px; height:28px;
+    border-radius:50%;
+    border:none;
+    background:var(--gold);
+    color:#1b1204;
+    font-size:11px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .chord-visuals{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .chord-staff-svg{ width:140px; height:110px; flex:0 0 auto; }
+  .chord-piano-svg{ width:192px; height:60px; flex:0 0 auto; }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    margin-top:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">twelve keys, one pattern</span>
+    <h1>Major Scale Explorer</h1>
+    <p>Tap a key to see its major scale on the keyboard and the staff.</p>
+  </header>
+
+  <div class="cof-wrap">
+    <svg id="cofSvg" viewBox="0 0 210 210"></svg>
+    <span class="cof-label">circle of fifths</span>
+  </div>
+
+  <div class="keys-row" id="keyRow"></div>
+
+  <section class="card">
+    <h2 id="pianoTitle">C Major — Piano</h2>
+    <p class="sub">Gold = tonic (the "home" note) · Teal = the rest of the scale · plain outer keys are just for reference, one note before and after the octave</p>
+    <svg id="pianoSvg" viewBox="0 0 522 190"></svg>
+    <div class="legend">
+      <span><span class="dot gold"></span> Tonic</span>
+      <span><span class="dot teal"></span> Scale note</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="staff-head">
+      <div>
+        <h2 id="staffTitle">C Major — Staff</h2>
+        <p class="sub">The same eight notes, tonic to tonic, on the treble clef</p>
+      </div>
+      <button class="play-btn" id="playScaleBtn">▶ Play scale</button>
+    </div>
+    <svg id="staffSvg" viewBox="0 0 680 240"></svg>
+    <div class="formula" id="formulaLine"></div>
+  </section>
+
+  <section class="card">
+    <h2>Diatonic Chords</h2>
+    <p class="sub">The seven triads built from the scale — tap any row to hear it</p>
+    <div id="chordsList"></div>
+  </section>
+
+  <footer>Whole–whole–half–whole–whole–whole–half — every major scale, every time.</footer>
+</div>
+
+<script>
+// ---------- Data ----------
+const scales = {
+  "C":  ["C","D","E","F","G","A","B"],
+  "G":  ["G","A","B","C","D","E","F#"],
+  "D":  ["D","E","F#","G","A","B","C#"],
+  "A":  ["A","B","C#","D","E","F#","G#"],
+  "E":  ["E","F#","G#","A","B","C#","D#"],
+  "B":  ["B","C#","D#","E","F#","G#","A#"],
+  "F#": ["F#","G#","A#","B","C#","D#","E#"],
+  "Db": ["Db","Eb","F","Gb","Ab","Bb","C"],
+  "Ab": ["Ab","Bb","C","Db","Eb","F","G"],
+  "Eb": ["Eb","F","G","Ab","Bb","C","D"],
+  "Bb": ["Bb","C","D","Eb","F","G","A"],
+  "F":  ["F","G","A","Bb","C","D","E"]
+};
+const keyOrder = ["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
+const keyDisplay = {"F#":"F♯ / G♭","Db":"D♭","Ab":"A♭","Eb":"E♭","Bb":"B♭"};
+
+const semitoneMap = {
+  C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,"E#":5,F:5,"F#":6,Gb:6,
+  G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11,Cb:11
+};
+const letters = ['C','D','E','F','G','A','B'];
+const whiteSemitone = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+const blackAfter = {C:'C#',D:'D#',F:'F#',G:'G#',A:'A#'};
+
+function prettyName(n){ return n.replace('#','♯').replace('b','♭'); }
+function noteLetter(n){ return n[0]; }
+function noteAccidental(n){ return n.slice(1); }
+
+// ---------- SVG helpers ----------
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs){
+  const e = document.createElementNS(SVGNS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+// finds the white key a note sits on or immediately after (natural keys map to themselves)
+const whiteSemitoneRev = {0:'C',2:'D',4:'E',5:'F',7:'G',9:'A',11:'B'};
+function anchorLetterFor(rootSemitone){
+  let s = rootSemitone;
+  while(!(s in whiteSemitoneRev)) s = (s - 1 + 12) % 12;
+  return whiteSemitoneRev[s];
+}
+
+// ---------- Audio ----------
+let audioCtx = null;
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function scheduleTone(freq, startTime, duration){
+  const ctx = getCtx();
+  const ring = Math.max(duration, 1.0);
+
+  // a handful of harmonic partials, each decaying at its own rate — higher
+  // partials die out faster, which is most of what makes a tone read as "piano"
+  const partials = [
+    {mult:1, amp:1.00, decay:1.00},
+    {mult:2, amp:0.55, decay:0.85},
+    {mult:3, amp:0.28, decay:0.65},
+    {mult:4, amp:0.15, decay:0.50},
+    {mult:5, amp:0.08, decay:0.38},
+    {mult:6, amp:0.04, decay:0.30}
+  ];
+
+  const master = ctx.createGain();
+  master.gain.value = 1;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = Math.min(freq*7, 8000);
+  filter.Q.value = 0.6;
+  master.connect(filter).connect(ctx.destination);
+
+  partials.forEach(p=>{
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq*p.mult;
+    const g = ctx.createGain();
+    const peak = p.amp*0.24;
+    const tail = startTime + ring*p.decay + 0.15;
+    g.gain.setValueAtTime(0.0001, startTime);
+    g.gain.exponentialRampToValueAtTime(peak, startTime+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, tail);
+    osc.connect(g).connect(master);
+    osc.start(startTime);
+    osc.stop(tail+0.05);
+  });
+}
+function playNoteNow(freq){
+  const ctx = getCtx();
+  scheduleTone(freq, ctx.currentTime, 0.55);
+}
+// C4 = middle C, used as the pitch reference for all frequency math
+const C4 = 261.63;
+function freqForPianoKey(anchorSemitone, semitone){
+  const eff = semitone >= anchorSemitone ? semitone : semitone + 12;
+  return C4 * Math.pow(2, eff/12);
+}
+function freqForStaffNote(name, octave){
+  return C4 * Math.pow(2, ((octave-4)*12 + semitoneMap[name]) / 12);
+}
+function playScale(key){
+  const btn = document.getElementById('playScaleBtn');
+  const notes = buildStaffNotes(key);
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const step = 0.4;
+  notes.forEach((n,i)=>{
+    const freq = freqForStaffNote(n.name, n.octave);
+    const dur = i === notes.length-1 ? 0.8 : 0.5;
+    scheduleTone(freq, now + i*step, dur);
+  });
+  btn.disabled = true;
+  setTimeout(()=>{ btn.disabled = false; }, (notes.length*step + 0.6) * 1000);
+}
+
+function renderPiano(key){
+  const svg = document.getElementById('pianoSvg');
+  svg.innerHTML = '';
+  const scale = scales[key];
+  const scaleSemitones = new Set(scale.map(n => semitoneMap[n]));
+  const rootSemitone = semitoneMap[scale[0]];
+
+  // label for each semitone, spelled the way this key spells it
+  const semitoneLabel = {};
+  scale.forEach(n => { semitoneLabel[semitoneMap[n]] = n; });
+
+  const wKeyW = 56, wKeyH = 150, bKeyW = 34, bKeyH = 95;
+
+  // rotate the 7 letters so the octave starts on the root's key (or, if the
+  // root is a black key, on the white key immediately below it)
+  const anchorLetter = anchorLetterFor(rootSemitone);
+  const startIdx = letters.indexOf(anchorLetter);
+  const octaveLetters = [0,1,2,3,4,5,6].map(i => letters[(startIdx+i)%7]);
+  const rootAnchorSemitone = whiteSemitone[anchorLetter];
+
+  // one extra "open" note buffered on each side of the octave
+  const prevLetter = letters[(startIdx-1+7)%7];
+  const nextLetter = letters[(startIdx+7)%7]; // == anchorLetter, one octave up
+  const extLetters = [prevLetter, ...octaveLetters, nextLetter]; // 9 white keys
+  const lastIdx = extLetters.length-1;
+
+  // cumulative semitone offsets so pitch stays correct across the buffer notes
+  const absOffset = [0];
+  for(let i=1;i<extLetters.length;i++){
+    const prev = whiteSemitone[extLetters[i-1]];
+    const cur = whiteSemitone[extLetters[i]];
+    absOffset.push(absOffset[i-1] + ((cur-prev+12)%12));
+  }
+  const anchorOffset = absOffset[1]; // index of the true octave-start key
+  const pitchOffset = i => rootAnchorSemitone + (absOffset[i]-anchorOffset);
+  const freqFromOffset = off => C4 * Math.pow(2, off/12);
+
+  // white keys
+  extLetters.forEach((L,i)=>{
+    const x = i*wKeyW;
+    const isBuffer = i===0 || i===lastIdx;
+    const st = whiteSemitone[L];
+    const isScale = !isBuffer && scaleSemitones.has(st);
+    const isRoot = !isBuffer && st === rootSemitone;
+    const fill = isRoot ? '#d4af37' : isScale ? '#5ea8a0' : '#f2efe6';
+    const freq = freqFromOffset(pitchOffset(i));
+    const rect = el('rect',{x,y:0,width:wKeyW-2,height:wKeyH,rx:4,fill,stroke:'#10151c','stroke-width':1.2});
+    rect.addEventListener('click', ()=>playNoteNow(freq));
+    svg.appendChild(rect);
+    if(isScale){
+      const label = semitoneLabel[st];
+      const t = el('text',{
+        x:x+(wKeyW-2)/2, y:wKeyH-14, 'text-anchor':'middle',
+        'font-family':"'Caveat',cursive", 'font-size':20,
+        'font-weight':700,
+        fill: isRoot ? '#1b1204' : '#132420'
+      });
+      t.textContent = prettyName(label);
+      svg.appendChild(t);
+    }
+  });
+
+  // black keys (sit between the white key at index i and i+1)
+  for(let i=0;i<lastIdx;i++){
+    const L = extLetters[i];
+    if(!blackAfter[L]) continue;
+    const bName = blackAfter[L];
+    const st = semitoneMap[bName];
+    const isBuffer = i===0;
+    const isScale = !isBuffer && scaleSemitones.has(st);
+    const isRoot = !isBuffer && st === rootSemitone;
+    const x = (i+1)*wKeyW - bKeyW/2;
+    const fill = isRoot ? '#d4af37' : isScale ? '#5ea8a0' : '#10151c';
+    const freq = freqFromOffset(pitchOffset(i)+1);
+    const rect = el('rect',{x,y:0,width:bKeyW,height:bKeyH,rx:3,fill,stroke:'#05070a','stroke-width':1});
+    rect.addEventListener('click', ()=>playNoteNow(freq));
+    svg.appendChild(rect);
+    if(isScale){
+      const label = semitoneLabel[st];
+      const t = el('text',{
+        x:x+bKeyW/2, y:bKeyH-10, 'text-anchor':'middle',
+        'font-family':"'Caveat',cursive", 'font-size':13,'font-weight':700,
+        fill: isRoot ? '#1b1204' : '#eafaf6'
+      });
+      t.textContent = prettyName(label);
+      svg.appendChild(t);
+    }
+  }
+
+  // dashed markers separating the buffer notes from the main octave
+  svg.appendChild(el('line',{x1:wKeyW,y1:0,x2:wKeyW,y2:wKeyH+8,stroke:'#8b97a6','stroke-width':1,'stroke-dasharray':'3 3',opacity:0.4}));
+  svg.appendChild(el('line',{x1:(lastIdx-1)*wKeyW,y1:0,x2:(lastIdx-1)*wKeyW,y2:wKeyH+8,stroke:'#8b97a6','stroke-width':1,'stroke-dasharray':'3 3',opacity:0.4}));
+}
+
+// ---------- Staff ----------
+function buildStaffNotes(key){
+  const scale = scales[key];
+  const tonicLetter = noteLetter(scale[0]);
+  const tonicIdx = letters.indexOf(tonicLetter);
+  const notes = [];
+  for(let i=0;i<8;i++){
+    const srcIdx = i % 7;
+    const noteName = i < 7 ? scale[srcIdx] : scale[0];
+    const letterIdx = (tonicIdx + i) % 7;
+    const octave = 4 + Math.floor((tonicIdx + i) / 7);
+    notes.push({
+      name: noteName,
+      letter: letters[letterIdx],
+      accidental: noteAccidental(noteName),
+      octave
+    });
+  }
+  return notes;
+}
+function positionOf(letter, octave){
+  const li = letters.indexOf(letter); // C=0..B=6
+  return (octave - 4) * 7 + (li - 2); // E4 = 0
+}
+
+function renderStaff(key){
+  const svg = document.getElementById('staffSvg');
+  svg.innerHTML = '';
+  const notes = buildStaffNotes(key);
+  const width = 680, height = 240;
+  const lineGap = 16, stepPx = lineGap/2;
+  const bottomLineY = 150; // E4
+
+  // staff lines
+  for(let l=0;l<5;l++){
+    const pos = l*2;
+    const y = bottomLineY - pos*stepPx;
+    svg.appendChild(el('line',{x1:40,y1:y,x2:width-24,y2:y,stroke:'#8b97a6','stroke-width':1.2}));
+  }
+
+  // clef
+  const clef = el('text',{x:44,y:bottomLineY - 1.5*stepPx + 8,'font-family':"'Playfair Display',serif",'font-size':78,fill:'#d4af37'});
+  clef.textContent = '𝄞';
+  svg.appendChild(clef);
+
+  const startX = 150, endX = width-50;
+  const spacing = (endX-startX)/(notes.length-1);
+
+  notes.forEach((n,i)=>{
+    const pos = positionOf(n.letter, n.octave);
+    const x = startX + i*spacing;
+    const y = bottomLineY - pos*stepPx;
+    const isRoot = i===0 || i===notes.length-1;
+    const color = isRoot ? '#d4af37' : '#edebe3';
+
+    // ledger lines
+    if(pos <= -2){
+      for(let e=-2; e>=pos; e-=2){
+        const ly = bottomLineY - e*stepPx;
+        svg.appendChild(el('line',{x1:x-13,y1:ly,x2:x+13,y2:ly,stroke:'#8b97a6','stroke-width':1.2}));
+      }
+    } else if(pos >= 10){
+      for(let e=10; e<=pos; e+=2){
+        const ly = bottomLineY - e*stepPx;
+        svg.appendChild(el('line',{x1:x-13,y1:ly,x2:x+13,y2:ly,stroke:'#8b97a6','stroke-width':1.2}));
+      }
+    }
+
+    // accidental
+    if(n.accidental){
+      const sym = n.accidental === '#' ? '♯' : '♭';
+      const at = el('text',{x:x-20,y:y+6,'font-family':'Georgia, serif','font-size':19,fill:color,'text-anchor':'middle'});
+      at.textContent = sym;
+      svg.appendChild(at);
+    }
+
+    // notehead
+    svg.appendChild(el('ellipse',{cx:x,cy:y,rx:8.5,ry:6.5,fill:color,stroke:'#10151c','stroke-width':1}));
+
+    // stem
+    const stemUp = pos < 4;
+    const stemX = stemUp ? x+8.3 : x-8.3;
+    const stemY2 = stemUp ? y-34 : y+34;
+    svg.appendChild(el('line',{x1:stemX,y1:y,x2:stemX,y2:stemY2,stroke:color,'stroke-width':1.4}));
+
+    // note name label
+    const lab = el('text',{x,y:height-12,'text-anchor':'middle','font-family':"'Caveat',cursive",'font-size':19,'font-weight':700,fill:color});
+    lab.textContent = prettyName(n.name) + (i===0||i===notes.length-1 ? ' •' : '');
+    svg.appendChild(lab);
+  });
+}
+
+// ---------- Diatonic chords ----------
+const romanNumerals = ['I','ii','iii','IV','V','vi','vii°'];
+const chordQualities = ['major','minor','minor','major','major','minor','diminished'];
+
+function buildTriad(key, i){
+  const scaleArr = scales[key];
+  const rootLetterIdx = letters.indexOf(noteLetter(scaleArr[i]));
+  function makeNote(stepsUp, name){
+    const letterIdx = (rootLetterIdx + stepsUp) % 7;
+    const octave = 4 + Math.floor((rootLetterIdx + stepsUp) / 7);
+    return { name, letter: letters[letterIdx], accidental: noteAccidental(name), octave };
+  }
+  return {
+    roman: romanNumerals[i],
+    quality: chordQualities[i],
+    notes: [
+      makeNote(0, scaleArr[i]),
+      makeNote(2, scaleArr[(i+2)%7]),
+      makeNote(4, scaleArr[(i+4)%7])
+    ]
+  };
+}
+
+function drawChordStaff(svg, chordNotes){
+  svg.innerHTML = '';
+  const width = 140, height = 118;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const lineGap = 11, stepPx = lineGap/2;
+  const bottomLineY = 82;
+
+  for(let l=0;l<5;l++){
+    const pos = l*2;
+    const y = bottomLineY - pos*stepPx;
+    svg.appendChild(el('line',{x1:24,y1:y,x2:width-10,y2:y,stroke:'#8b97a6','stroke-width':1}));
+  }
+  const clef = el('text',{x:6,y:bottomLineY - 1.2*stepPx + 7,'font-family':"'Playfair Display',serif",'font-size':36,fill:'#d4af37'});
+  clef.textContent = '𝄞';
+  svg.appendChild(clef);
+
+  const x = 92;
+  chordNotes.forEach((n,idx)=>{
+    const pos = positionOf(n.letter, n.octave);
+    const y = bottomLineY - pos*stepPx;
+    const isRoot = idx===0;
+    const color = isRoot ? '#d4af37' : '#edebe3';
+
+    if(pos <= -2){
+      for(let e=-2; e>=pos; e-=2){
+        const ly = bottomLineY - e*stepPx;
+        svg.appendChild(el('line',{x1:x-11,y1:ly,x2:x+11,y2:ly,stroke:'#8b97a6','stroke-width':1}));
+      }
+    } else if(pos >= 10){
+      for(let e=10; e<=pos; e+=2){
+        const ly = bottomLineY - e*stepPx;
+        svg.appendChild(el('line',{x1:x-11,y1:ly,x2:x+11,y2:ly,stroke:'#8b97a6','stroke-width':1}));
+      }
+    }
+
+    if(n.accidental){
+      const sym = n.accidental === '#' ? '♯' : '♭';
+      const offsetX = idx===1 ? -21 : -13;
+      const at = el('text',{x:x+offsetX,y:y+5,'font-family':'Georgia, serif','font-size':14,fill:color,'text-anchor':'middle'});
+      at.textContent = sym;
+      svg.appendChild(at);
+    }
+
+    // hollow whole notehead — no stem
+    svg.appendChild(el('ellipse',{cx:x,cy:y,rx:7.5,ry:5.5,fill:'none',stroke:color,'stroke-width':2}));
+  });
+}
+
+function drawChordPiano(svg, rootSemitone, chordSemitones){
+  svg.innerHTML = '';
+  const wKeyW = 24, wKeyH = 60, bKeyW = 15, bKeyH = 38;
+  const anchorLetter = anchorLetterFor(rootSemitone);
+  const startIdx = letters.indexOf(anchorLetter);
+  const octaveLetters = [0,1,2,3,4,5,6].map(i => letters[(startIdx+i)%7]);
+  const prevLetter = letters[(startIdx-1+7)%7];
+  const extLetters = [prevLetter, ...octaveLetters]; // buffer key + one octave
+  const lastIdx = extLetters.length - 1;
+  svg.setAttribute('viewBox', `0 0 ${extLetters.length*wKeyW+4} ${wKeyH+4}`);
+
+  extLetters.forEach((L,i)=>{
+    const x = i*wKeyW;
+    const isBuffer = i===0;
+    const st = whiteSemitone[L];
+    const isChord = !isBuffer && chordSemitones.has(st);
+    const isRoot = !isBuffer && st === rootSemitone;
+    const fill = isRoot ? '#d4af37' : isChord ? '#5ea8a0' : '#f2efe6';
+    svg.appendChild(el('rect',{x,y:0,width:wKeyW-1,height:wKeyH,rx:2,fill,stroke:'#10151c','stroke-width':1}));
+  });
+  for(let i=0;i<lastIdx;i++){
+    const L = extLetters[i];
+    if(!blackAfter[L]) continue;
+    const st = semitoneMap[blackAfter[L]];
+    const isBuffer = i===0;
+    const isChord = !isBuffer && chordSemitones.has(st);
+    const isRoot = !isBuffer && st === rootSemitone;
+    const x = (i+1)*wKeyW - bKeyW/2;
+    const fill = isRoot ? '#d4af37' : isChord ? '#5ea8a0' : '#10151c';
+    svg.appendChild(el('rect',{x,y:0,width:bKeyW,height:bKeyH,rx:2,fill,stroke:'#05070a','stroke-width':1}));
+  }
+  svg.appendChild(el('line',{x1:wKeyW,y1:0,x2:wKeyW,y2:wKeyH,stroke:'#8b97a6','stroke-width':1,'stroke-dasharray':'2 2',opacity:0.4}));
+}
+
+function playChord(notes){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  notes.forEach(n => scheduleTone(freqForStaffNote(n.name, n.octave), now, 1.2));
+}
+
+function renderChords(key){
+  const container = document.getElementById('chordsList');
+  container.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const chord = buildTriad(key, i);
+    const rootSemitone = semitoneMap[chord.notes[0].name];
+    const chordSemitones = new Set(chord.notes.map(n => semitoneMap[n.name]));
+
+    const row = document.createElement('div');
+    row.className = 'chord-row';
+
+    const head = document.createElement('div');
+    head.className = 'chord-head';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'chord-name';
+    nameSpan.textContent = `${chord.roman} · ${prettyName(chord.notes[0].name)} ${chord.quality}`;
+    const playBtn = document.createElement('button');
+    playBtn.className = 'chord-play';
+    playBtn.textContent = '▶';
+    playBtn.addEventListener('click', (e)=>{ e.stopPropagation(); playChord(chord.notes); });
+    head.appendChild(nameSpan);
+    head.appendChild(playBtn);
+
+    const visuals = document.createElement('div');
+    visuals.className = 'chord-visuals';
+    const staffSvg = el('svg',{class:'chord-staff-svg'});
+    const pianoSvg = el('svg',{class:'chord-piano-svg'});
+    visuals.appendChild(staffSvg);
+    visuals.appendChild(pianoSvg);
+
+    row.appendChild(head);
+    row.appendChild(visuals);
+    row.addEventListener('click', ()=>playChord(chord.notes));
+    container.appendChild(row);
+
+    drawChordStaff(staffSvg, chord.notes);
+    drawChordPiano(pianoSvg, rootSemitone, chordSemitones);
+  }
+}
+
+
+const accidentalInfo = {
+  C:{count:0,sym:''},
+  G:{count:1,sym:'♯'}, D:{count:2,sym:'♯'}, A:{count:3,sym:'♯'},
+  E:{count:4,sym:'♯'}, B:{count:5,sym:'♯'}, 'F#':{count:6,sym:'♯'},
+  Db:{count:5,sym:'♭'}, Ab:{count:4,sym:'♭'}, Eb:{count:3,sym:'♭'},
+  Bb:{count:2,sym:'♭'}, F:{count:1,sym:'♭'}
+};
+const cofDualLabel = {
+  'B': ['B','C♭'],
+  'F#': ['F♯','G♭'],
+  'Db': ['D♭','C♯']
+};
+function cofLabelLines(k){
+  if(cofDualLabel[k]) return cofDualLabel[k];
+  return [prettyName(k)];
+}
+
+function buildCircleOfFifths(){
+  const svg = document.getElementById('cofSvg');
+  svg.innerHTML = '';
+  const cx=105, cy=105, R=58, r=15, countR=R+30;
+  svg.appendChild(el('circle',{cx,cy,r:R,fill:'none',stroke:'#3a4756','stroke-width':1,'stroke-dasharray':'2 4'}));
+  keyOrder.forEach((k,i)=>{
+    const angle = (-90 + i*30) * Math.PI/180;
+    const x = cx + R*Math.cos(angle);
+    const y = cy + R*Math.sin(angle);
+
+    // accidental count, just outside the ring
+    const info = accidentalInfo[k];
+    if(info.count>0){
+      const cxo = cx + countR*Math.cos(angle);
+      const cyo = cy + countR*Math.sin(angle);
+      const ct = el('text',{
+        x:cxo,y:cyo+3,'text-anchor':'middle','font-family':"'Caveat',cursive",
+        'font-size':13,'font-weight':700, fill:'#6d7a8a'
+      });
+      ct.textContent = info.count + info.sym;
+      svg.appendChild(ct);
+    }
+
+    const g = el('g',{id:'cof-'+k, style:'cursor:pointer'});
+    const circle = el('circle',{cx:x,cy:y,r,fill:'#243040',stroke:'#3a4756','stroke-width':1.3});
+    g.appendChild(circle);
+
+    const lines = cofLabelLines(k);
+    if(lines.length===2){
+      const t = el('text',{x,y:y-1,'text-anchor':'middle','font-family':"'Inter',sans-serif",'font-weight':700,fill:'#8b97a6'});
+      const t1 = el('tspan',{x,dy:-1,'font-size':9.5}); t1.textContent = lines[0];
+      const t2 = el('tspan',{x,dy:10,'font-size':8}); t2.textContent = '/'+lines[1];
+      t.appendChild(t1); t.appendChild(t2);
+      g.appendChild(t);
+    } else {
+      const t = el('text',{
+        x, y:y+4,'text-anchor':'middle','font-family':"'Inter',sans-serif",
+        'font-size':12,'font-weight':600, fill:'#8b97a6'
+      });
+      t.textContent = lines[0];
+      g.appendChild(t);
+    }
+    g.addEventListener('click', ()=>selectKey(k));
+    svg.appendChild(g);
+  });
+}
+function updateCircleOfFifths(activeKey){
+  keyOrder.forEach(k=>{
+    const g = document.getElementById('cof-'+k);
+    const circle = g.querySelector('circle');
+    const texts = g.querySelectorAll('text, tspan');
+    const isActive = k === activeKey;
+    circle.setAttribute('r', isActive ? 17.5 : 15);
+    circle.setAttribute('fill', isActive ? '#d4af37' : '#243040');
+    circle.setAttribute('stroke', isActive ? '#d4af37' : '#3a4756');
+    texts.forEach(t=>{
+      t.setAttribute('fill', isActive ? '#1b1204' : '#8b97a6');
+    });
+    const mainText = g.querySelector('text');
+    mainText.setAttribute('font-weight', isActive ? 700 : 600);
+  });
+}
+
+// ---------- UI wiring ----------
+let currentKey = 'C';
+function selectKey(key){
+  currentKey = key;
+  document.querySelectorAll('.key-chip').forEach(c=>{
+    c.classList.toggle('active', c.dataset.key===key);
+  });
+  updateCircleOfFifths(key);
+  const label = keyDisplay[key] || key;
+  document.getElementById('pianoTitle').textContent = `${label} Major — Piano`;
+  document.getElementById('staffTitle').textContent = `${label} Major — Staff`;
+  document.getElementById('formulaLine').textContent =
+    scales[key].map(prettyName).join('  –  ') + `  –  ${prettyName(scales[key][0])}`;
+  renderPiano(key);
+  renderStaff(key);
+  renderChords(key);
+}
+
+const row = document.getElementById('keyRow');
+keyOrder.forEach(k=>{
+  const btn = document.createElement('button');
+  btn.className = 'key-chip';
+  btn.dataset.key = k;
+  btn.textContent = keyDisplay[k] || k;
+  btn.addEventListener('click', ()=>selectKey(k));
+  row.appendChild(btn);
+});
+
+document.getElementById('playScaleBtn').addEventListener('click', ()=>playScale(currentKey));
+
+buildCircleOfFifths();
+selectKey('C');
+</script>
+</body>
+</html>
