@@ -34,6 +34,9 @@
     margin:0 auto;
     padding:28px 16px 56px;
   }
+  @media (min-width: 860px){
+    .wrap{ max-width:1000px; }
+  }
   header{
     text-align:center;
     margin-bottom:22px;
@@ -170,7 +173,12 @@
     margin-top:8px;
     letter-spacing:1px;
   }
-  #chordsList{ display:flex; flex-direction:column; gap:10px; }
+  #chordsList{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap:10px;
+    align-items:start;
+  }
   .chord-row{
     background:var(--panel-2);
     border:1px solid var(--rule);
@@ -214,6 +222,50 @@
   }
   .chord-staff-svg{ width:140px; height:110px; flex:0 0 auto; }
   .chord-piano-svg{ width:192px; height:60px; flex:0 0 auto; }
+
+  #progressionsList{ display:flex; flex-direction:column; gap:10px; }
+  .progression-row{
+    background:var(--panel-2);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:12px 14px 13px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .progression-roman{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    font-size:16px;
+    color:var(--chalk);
+    margin-bottom:2px;
+  }
+  .progression-chords{
+    font-family:'Caveat',cursive;
+    font-size:16px;
+    color:var(--teal);
+    letter-spacing:0.3px;
+  }
+  .progression-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .prog-btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    border:1px solid var(--rule);
+    background:transparent;
+    color:var(--chalk);
+    transition:opacity 0.15s ease;
+  }
+  .prog-btn:hover{ opacity:0.8; }
+  .prog-btn.primary{ background:var(--gold); color:#1b1204; border-color:var(--gold); }
+  .prog-btn.secondary{ border-color:var(--teal); color:var(--teal); }
 
   footer{
     text-align:center;
@@ -264,6 +316,12 @@
     <h2>Diatonic Chords</h2>
     <p class="sub">The seven triads built from the scale — tap any row to hear it</p>
     <div id="chordsList"></div>
+  </section>
+
+  <section class="card">
+    <h2>Common Progressions</h2>
+    <p class="sub">A few familiar patterns, built from the chords above — block chords, a pop-style full-band feel, or an arpeggio</p>
+    <div id="progressionsList"></div>
   </section>
 
   <footer>Whole–whole–half–whole–whole–whole–half — every major scale, every time.</footer>
@@ -610,7 +668,7 @@ function drawChordStaff(svg, chordNotes){
     const y = bottomLineY - pos*stepPx;
     svg.appendChild(el('line',{x1:24,y1:y,x2:width-10,y2:y,stroke:'#8b97a6','stroke-width':1}));
   }
-  const clef = el('text',{x:6,y:bottomLineY - 1.2*stepPx + 7,'font-family':"'Playfair Display',serif",'font-size':36,fill:'#d4af37'});
+  const clef = el('text',{x:4,y:bottomLineY - 1.2*stepPx + 9,'font-family':"'Playfair Display',serif",'font-size':50,fill:'#d4af37'});
   clef.textContent = '𝄞';
   svg.appendChild(clef);
 
@@ -646,10 +704,9 @@ function drawChordStaff(svg, chordNotes){
   });
 }
 
-function drawChordPiano(svg, rootSemitone, chordSemitones){
+function drawChordPiano(svg, anchorLetter, rootSemitone, chordSemitones){
   svg.innerHTML = '';
   const wKeyW = 24, wKeyH = 60, bKeyW = 15, bKeyH = 38;
-  const anchorLetter = anchorLetterFor(rootSemitone);
   const startIdx = letters.indexOf(anchorLetter);
   const octaveLetters = [0,1,2,3,4,5,6].map(i => letters[(startIdx+i)%7]);
   const prevLetter = letters[(startIdx-1+7)%7];
@@ -677,7 +734,6 @@ function drawChordPiano(svg, rootSemitone, chordSemitones){
     const fill = isRoot ? '#d4af37' : isChord ? '#5ea8a0' : '#10151c';
     svg.appendChild(el('rect',{x,y:0,width:bKeyW,height:bKeyH,rx:2,fill,stroke:'#05070a','stroke-width':1}));
   }
-  svg.appendChild(el('line',{x1:wKeyW,y1:0,x2:wKeyW,y2:wKeyH,stroke:'#8b97a6','stroke-width':1,'stroke-dasharray':'2 2',opacity:0.4}));
 }
 
 function playChord(notes){
@@ -689,6 +745,7 @@ function playChord(notes){
 function renderChords(key){
   const container = document.getElementById('chordsList');
   container.innerHTML = '';
+  const scaleAnchorLetter = anchorLetterFor(semitoneMap[scales[key][0]]);
   for(let i=0;i<7;i++){
     const chord = buildTriad(key, i);
     const rootSemitone = semitoneMap[chord.notes[0].name];
@@ -722,8 +779,121 @@ function renderChords(key){
     container.appendChild(row);
 
     drawChordStaff(staffSvg, chord.notes);
-    drawChordPiano(pianoSvg, rootSemitone, chordSemitones);
+    drawChordPiano(pianoSvg, scaleAnchorLetter, rootSemitone, chordSemitones);
   }
+}
+
+// ---------- Common progressions ----------
+// degree indices are 0-based (0=I, 3=IV, 4=V, 5=vi, ...)
+const progressions = [
+  { label: 'I – V – vi – IV', degrees: [0,4,5,3] },
+  { label: 'vi – IV – I – V', degrees: [5,3,0,4] },
+  { label: 'IV – I – V – vi', degrees: [3,0,4,5] }
+];
+
+function chordShortName(chord){
+  const root = prettyName(chord.notes[0].name);
+  if(chord.quality === 'minor') return root + 'm';
+  if(chord.quality === 'diminished') return root + '°';
+  return root;
+}
+
+function playProgression(chords){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const step = 0.9;
+  chords.forEach((chord,i)=>{
+    const dur = i === chords.length-1 ? 1.3 : 0.85;
+    chord.notes.forEach(n => scheduleTone(freqForStaffNote(n.name, n.octave), now + i*step, dur));
+  });
+}
+
+// left-hand octave bass + right-hand chord stabs, pop-style, each chord
+// getting a couple of bars so the feel actually lands before moving on
+function playProgressionBand(chords){
+  const ctx = getCtx();
+  let t = ctx.currentTime;
+  const beat = 0.32;
+  const barsPerChord = 2;
+  chords.forEach(chord=>{
+    const root = chord.notes[0];
+    const bassLow = freqForStaffNote(root.name, root.octave-1);
+    const bassHigh = freqForStaffNote(root.name, root.octave);
+    for(let bar=0; bar<barsPerChord; bar++){
+      const barStart = t + bar*4*beat;
+      // beats 0 & 2: left-hand octave bass
+      [0,2].forEach(beatIdx=>{
+        scheduleTone(bassLow, barStart + beatIdx*beat, beat*0.9);
+        scheduleTone(bassHigh, barStart + beatIdx*beat, beat*0.9);
+      });
+      // beats 1 & 3: right-hand chord stab
+      [1,3].forEach(beatIdx=>{
+        chord.notes.forEach(n => scheduleTone(freqForStaffNote(n.name, n.octave), barStart + beatIdx*beat, beat*0.7));
+      });
+    }
+    t += barsPerChord*4*beat;
+  });
+}
+
+// flowing ascending arpeggio through each chord in turn
+function playProgressionArpeggio(chords){
+  const ctx = getCtx();
+  let t = ctx.currentTime;
+  const noteDur = 0.22;
+  chords.forEach(chord=>{
+    const seq = [
+      chord.notes[0], chord.notes[1], chord.notes[2],
+      { name: chord.notes[0].name, octave: chord.notes[0].octave+1 }
+    ];
+    seq.forEach((n,idx)=>{
+      scheduleTone(freqForStaffNote(n.name, n.octave), t + idx*noteDur, noteDur*1.3);
+    });
+    t += seq.length*noteDur;
+  });
+}
+
+function renderProgressions(key){
+  const container = document.getElementById('progressionsList');
+  container.innerHTML = '';
+  progressions.forEach(prog=>{
+    const chords = prog.degrees.map(d => buildTriad(key, d));
+    const row = document.createElement('div');
+    row.className = 'progression-row';
+
+    const roman = document.createElement('div');
+    roman.className = 'progression-roman';
+    roman.textContent = prog.label;
+    const names = document.createElement('div');
+    names.className = 'progression-chords';
+    names.textContent = chords.map(chordShortName).join('  –  ');
+
+    const buttons = document.createElement('div');
+    buttons.className = 'progression-buttons';
+
+    const chordsBtn = document.createElement('button');
+    chordsBtn.className = 'prog-btn primary';
+    chordsBtn.textContent = '▶ Chords';
+    chordsBtn.addEventListener('click', ()=>playProgression(chords));
+
+    const bandBtn = document.createElement('button');
+    bandBtn.className = 'prog-btn secondary';
+    bandBtn.textContent = '▶ Full band';
+    bandBtn.addEventListener('click', ()=>playProgressionBand(chords));
+
+    const arpBtn = document.createElement('button');
+    arpBtn.className = 'prog-btn secondary';
+    arpBtn.textContent = '▶ Arpeggio';
+    arpBtn.addEventListener('click', ()=>playProgressionArpeggio(chords));
+
+    buttons.appendChild(chordsBtn);
+    buttons.appendChild(bandBtn);
+    buttons.appendChild(arpBtn);
+
+    row.appendChild(roman);
+    row.appendChild(names);
+    row.appendChild(buttons);
+    container.appendChild(row);
+  });
 }
 
 
@@ -823,6 +993,7 @@ function selectKey(key){
   renderPiano(key);
   renderStaff(key);
   renderChords(key);
+  renderProgressions(key);
 }
 
 const row = document.getElementById('keyRow');
